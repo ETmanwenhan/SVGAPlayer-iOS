@@ -90,11 +90,19 @@ static dispatch_semaphore_t videoSemaphore;
                 if ([obj isKindOfClass:[NSString class]]) {
                     NSString *filePath = [self.cacheDir stringByAppendingFormat:@"/%@.png", obj];
 //                    NSData *imageData = [NSData dataWithContentsOfFile:filePath];
-                    NSData *imageData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:NULL];
-                    if (imageData != nil) {
-                        UIImage *image = [[UIImage alloc] initWithData:imageData scale:2.0];
-                        if (image != nil) {
-                            [images setObject:image forKey:[key stringByDeletingPathExtension]];
+//                    NSData *imageData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:NULL];
+//                    if (imageData != nil) {
+//                        UIImage *image = [[UIImage alloc] initWithData:imageData scale:2.0];
+//                        if (image != nil) {
+//                            [images setObject:image forKey:[key stringByDeletingPathExtension]];
+//                        }
+//                    }
+                    // 等比例压缩
+                    UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+                    if (image != nil) {
+                        UIImage *resultImage = [SVGAVideoEntity YXJImageWithMaxSide:560 sourceImage:image];
+                        if (resultImage != nil) {
+                            [images setObject:resultImage forKey:[key stringByDeletingPathExtension]];
                         }
                     }
                 }
@@ -161,11 +169,19 @@ static dispatch_semaphore_t videoSemaphore;
             }
             if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
 //                NSData *imageData = [NSData dataWithContentsOfFile:filePath];
-                NSData *imageData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:NULL];
-                if (imageData != nil) {
-                    UIImage *image = [[UIImage alloc] initWithData:imageData scale:2.0];
-                    if (image != nil) {
-                        [images setObject:image forKey:key];
+//                NSData *imageData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:NULL];
+//                if (imageData != nil) {
+//                    UIImage *image = [[UIImage alloc] initWithData:imageData scale:2.0];
+//                    if (image != nil) {
+//                        [images setObject:image forKey:key];
+//                    }
+//                }
+                // 等比例压缩
+                UIImage *image = [UIImage imageWithContentsOfFile:filePath];
+                if (image != nil) {
+                    UIImage *resultImage = [SVGAVideoEntity YXJImageWithMaxSide:560 sourceImage:image];
+                    if (resultImage != nil) {
+                        [images setObject:resultImage forKey:key];
                     }
                 }
             }
@@ -176,8 +192,15 @@ static dispatch_semaphore_t videoSemaphore;
                 [audiosData setObject:protoImages[key] forKey:key];
             } else {
                 UIImage *image = [[UIImage alloc] initWithData:protoImages[key] scale:2.0];
+//                if (image != nil) {
+//                    [images setObject:image forKey:key];
+//                }
+                // 等比例压缩
                 if (image != nil) {
-                    [images setObject:image forKey:key];
+                    UIImage *resultImage = [SVGAVideoEntity YXJImageWithMaxSide:560 sourceImage:image];
+                    if (resultImage != nil) {
+                        [images setObject:resultImage forKey:key];
+                    }
                 }
             }
         }
@@ -231,6 +254,67 @@ static dispatch_semaphore_t videoSemaphore;
     dispatch_semaphore_wait(videoSemaphore, DISPATCH_TIME_FOREVER);
     [weakCache setObject:self forKey:cacheKey];
     dispatch_semaphore_signal(videoSemaphore);
+}
+
+/// 通过key清除缓存
+- (void)clearCache {
+    if (self.cacheKey == nil) {
+        return;
+    }
+    
+    [videoCache removeObjectForKey:self.cacheKey];
+    [weakCache removeObjectForKey:self.cacheKey];
+}
+
+/// 清除缓存
++ (void)clearAllCache {
+    
+    [videoCache removeAllObjects];
+    [weakCache removeAllObjects];
+}
+
++ (UIImage *)YXJImageWithMaxSide:(int)length sourceImage:(UIImage *)image{
+    if (image.size.width <= length && image.size.height <= length) {
+        return image;
+    }
+    
+    CGSize imgSize = CWSizeReduce(image.size, length);
+    UIImage *img = nil;
+    
+    //1代表1X
+    UIGraphicsBeginImageContextWithOptions(imgSize, NO, image.scale); // opaque -- 不透明（YES）
+    
+    [image drawInRect:CGRectMake(0, 0, imgSize.width, imgSize.height)
+            blendMode:kCGBlendModeNormal alpha:1.0];
+    
+    img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return img;
+}
+
+#pragma mark - Utility
+static inline
+CGSize CWSizeReduce(CGSize size, CGFloat limit) {// 按比例减少尺寸
+    CGFloat max = MAX(size.width, size.height);
+    CGFloat min = MIN(size.width, size.height);
+    if (max < limit) {
+        return size;
+    }
+    
+    CGSize imgSize;
+    CGFloat ratio = size.height / size.width;
+    if (size.width > size.height) {
+        imgSize = CGSizeMake(limit, limit*ratio);
+    } else {
+        imgSize = CGSizeMake(limit/ratio, limit);
+    }
+    
+    return imgSize;
+}
+
+- (void)dealloc{
+    NSLog(@"SVGAVideoEntity====>销毁");
 }
 
 @end

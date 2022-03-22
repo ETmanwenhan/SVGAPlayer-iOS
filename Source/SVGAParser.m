@@ -131,6 +131,7 @@ static NSOperationQueue *unzipQueue;
             SVGAProtoMovieEntity *protoObject = [SVGAProtoMovieEntity parseFromData:protoData error:&err];
             if (!err && [protoObject isKindOfClass:[SVGAProtoMovieEntity class]]) {
                 SVGAVideoEntity *videoItem = [[SVGAVideoEntity alloc] initWithProtoObject:protoObject cacheDir:cacheDir];
+                videoItem.cacheKey = cacheKey;
                 [videoItem resetImagesWithProtoObject:protoObject];
                 [videoItem resetSpritesWithProtoObject:protoObject];
                 [videoItem resetAudiosWithProtoObject:protoObject];
@@ -160,6 +161,7 @@ static NSOperationQueue *unzipQueue;
                 NSDictionary *JSONObject = [NSJSONSerialization JSONObjectWithData:JSONData options:kNilOptions error:&err];
                 if ([JSONObject isKindOfClass:[NSDictionary class]]) {
                     SVGAVideoEntity *videoItem = [[SVGAVideoEntity alloc] initWithJSONObject:JSONObject cacheDir:cacheDir];
+                    videoItem.cacheKey = cacheKey;
                     [videoItem resetImagesWithJSONObject:JSONObject];
                     [videoItem resetSpritesWithJSONObject:JSONObject];
                     if (self.enabledMemoryCache) {
@@ -222,6 +224,7 @@ static NSOperationQueue *unzipQueue;
             SVGAProtoMovieEntity *protoObject = [SVGAProtoMovieEntity parseFromData:inflateData error:&err];
             if (!err && [protoObject isKindOfClass:[SVGAProtoMovieEntity class]]) {
                 SVGAVideoEntity *videoItem = [[SVGAVideoEntity alloc] initWithProtoObject:protoObject cacheDir:@""];
+                videoItem.cacheKey = cacheKey;
                 [videoItem resetImagesWithProtoObject:protoObject];
                 [videoItem resetSpritesWithProtoObject:protoObject];
                 [videoItem resetAudiosWithProtoObject:protoObject];
@@ -280,6 +283,7 @@ static NSOperationQueue *unzipQueue;
                             SVGAProtoMovieEntity *protoObject = [SVGAProtoMovieEntity parseFromData:protoData error:&err];
                             if (!err) {
                                 SVGAVideoEntity *videoItem = [[SVGAVideoEntity alloc] initWithProtoObject:protoObject cacheDir:cacheDir];
+                                videoItem.cacheKey = cacheKey;
                                 [videoItem resetImagesWithProtoObject:protoObject];
                                 [videoItem resetSpritesWithProtoObject:protoObject];
                                 if (self.enabledMemoryCache) {
@@ -308,6 +312,7 @@ static NSOperationQueue *unzipQueue;
                                 NSDictionary *JSONObject = [NSJSONSerialization JSONObjectWithData:JSONData options:kNilOptions error:&err];
                                 if ([JSONObject isKindOfClass:[NSDictionary class]]) {
                                     SVGAVideoEntity *videoItem = [[SVGAVideoEntity alloc] initWithJSONObject:JSONObject cacheDir:cacheDir];
+                                    videoItem.cacheKey = cacheKey;
                                     [videoItem resetImagesWithJSONObject:JSONObject];
                                     [videoItem resetSpritesWithJSONObject:JSONObject];
                                     if (self.enabledMemoryCache) {
