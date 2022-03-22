@@ -65,6 +65,31 @@ static NSOperationQueue *unzipQueue;
         }];
         return;
     }
+    
+    // 接口缓存
+    NSCachedURLResponse *cachedResp = [[NSURLCache sharedURLCache] cachedResponseForRequest:URLRequest];
+    NSData * data = cachedResp.data;
+    if (data != nil) {
+        //NSLog(@"svga文件获取-缓存数据");
+        [self parseWithData:data cacheKey:[self cacheKey:URLRequest.URL] completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
+            if (completionBlock) {
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                    completionBlock(videoItem);
+                }];
+            }
+        } failureBlock:^(NSError * _Nonnull error) {
+            [[NSURLCache sharedURLCache] removeCachedResponseForRequest:URLRequest]; // 移除网络缓存
+            [self clearCache:[self cacheKey:URLRequest.URL]];
+            if (failureBlock) {
+                [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+                    failureBlock(error);
+                }];
+            }
+        }];
+        return;
+    }
+    
+    //NSLog(@"svga文件获取-远程数据====>%@", URLRequest.URL.absoluteString);
     [[[NSURLSession sharedSession] dataTaskWithRequest:URLRequest completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error == nil && data != nil) {
             [self parseWithData:data cacheKey:[self cacheKey:URLRequest.URL] completionBlock:^(SVGAVideoEntity * _Nonnull videoItem) {
@@ -73,7 +98,11 @@ static NSOperationQueue *unzipQueue;
                         completionBlock(videoItem);
                     }];
                 }
+                // 网络缓存
+                NSCachedURLResponse *cachedResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:data];
+                [[NSURLCache sharedURLCache] storeCachedResponse:cachedResponse forRequest:URLRequest];
             } failureBlock:^(NSError * _Nonnull error) {
+                [[NSURLCache sharedURLCache] removeCachedResponseForRequest:URLRequest]; // 移除网络缓存
                 [self clearCache:[self cacheKey:URLRequest.URL]];
                 if (failureBlock) {
                     [[NSOperationQueue mainQueue] addOperationWithBlock:^{
