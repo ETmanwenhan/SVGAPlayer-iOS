@@ -33,6 +33,7 @@ typedef void(^SVGAPlayerDynamicDrawingBlock)(CALayer *contentLayer, NSInteger fr
 @property (nonatomic, assign) IBInspectable BOOL clearsAfterStop;
 @property (nonatomic, copy) NSString *fillMode;
 @property (nonatomic, copy) NSRunLoopMode mainRunLoopMode;
+@property (nonatomic, assign) IBInspectable BOOL isMuteAudio; // 静音模式
 
 - (void)startAnimation;
 - (void)startAnimationWithRange:(NSRange)range reverse:(BOOL)reverse;
